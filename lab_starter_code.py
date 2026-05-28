@@ -29,7 +29,7 @@ def initialize_robot(api):
         print(state_full)
         if state == dType.DobotConnect.DobotConnect_NoError:
             print("Connected!")
-            name = "Hermy"#dType.GetDeviceName(api)
+            name = dType.GetDeviceName(api)
             if name[0] == "Not a dobot":
                 dType.DisconnectDobot(api)
                 continue
@@ -54,13 +54,15 @@ def initialize_robot(api):
 
 def move_to_xyz(api,x,y,z):
     cmdIndx = -1
-    execCmd = dType.SetPTPCmd(api,dType.PTPMode.PTPMOVLXYZMode,x,y,z,0,isQueued=0)[0]
+    # FIX: Changed isQueued=0 to isQueued=1 so the while loop correctly blocks Python
+    execCmd = dType.SetPTPCmd(api,dType.PTPMode.PTPMOVLXYZMode,x,y,z,0,isQueued=1)[0]
     while execCmd > dType.GetQueuedCmdCurrentIndex(api)[0]:
         dType.dSleep(25)
 
 def move_joint_angles(api,J1,J2,J3,J4=0):
     cmdIndx = -1
-    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVJANGLEMode, J1, J2, J3, J4, isQueued = 0)[0]
+    # FIX: Changed isQueued=0 to isQueued=1
+    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVJANGLEMode, J1, J2, J3, J4, isQueued=1)[0]
     while execCmd > dType.GetQueuedCmdCurrentIndex(api)[0]:
         dType.dSleep(25)
 
@@ -115,7 +117,7 @@ print("\n--- Part 2: Workspace Validation Tests ---")
 print("Moving to safe start position...")
 move_to_xyz(api, 200, 0, -10) 
 
-# --- TEST 1: Valid Point ---
+# TEST 1: Valid Point
 print("\n--- TEST 1: Valid Point ---")
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
@@ -126,7 +128,7 @@ if is_safe_move(current_xyz, valid_target):
 else:
     print(f"WARNING: Path to {valid_target} rejected!")
 
-# --- TEST 2: Z-Boundary Limit ---
+# TEST 2: Z-Boundary Limit
 print("\n--- TEST 2: Z-Boundary Limit ---")
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
@@ -137,7 +139,7 @@ if is_safe_move(current_xyz, z_target):
 else:
     print(f"WARNING: Path to {z_target} rejected! Z-height out of bounds.")
 
-# --- TEST 3: X-Boundary Limit ---
+# TEST 3: X-Boundary Limit
 print("\n--- TEST 3: X-Boundary Limit ---")
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
@@ -148,7 +150,7 @@ if is_safe_move(current_xyz, x_target):
 else:
     print(f"WARNING: Path to {x_target} rejected! Cannot reach behind robot.")
 
-# --- TEST 4: Maximum Radius ---
+# TEST 4: Maximum Radius
 print("\n--- TEST 4: Maximum Radius ---")
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
@@ -159,7 +161,7 @@ if is_safe_move(current_xyz, max_rad_target):
 else:
     print(f"WARNING: Path to {max_rad_target} rejected! Radius exceeds 260mm.")
 
-# --- TEST 5: Minimum Radius ---
+# TEST 5: Minimum Radius
 print("\n--- TEST 5: Minimum Radius ---")
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
@@ -170,15 +172,13 @@ if is_safe_move(current_xyz, min_rad_target):
 else:
     print(f"WARNING: Path to {min_rad_target} rejected! Radius under 140mm.")
 
-# --- TEST 6: Line Crossing Minimum Radius Zone ---
+# TEST 6: Line Crossing Minimum Radius Zone
 print("\n--- TEST 6: Line Crossing Minimum Radius Zone ---")
 print("Setting up start point for line test...")
 move_to_xyz(api, 0, 200, -50) 
-
 current_pose = dType.GetPose(api) 
 current_xyz = current_pose[0:3] 
 cross_target = [0, -200, -50] 
-
 if is_safe_move(current_xyz, cross_target):
     print(f"Path to {cross_target} is SAFE. Moving robot...")
     move_to_xyz(api, cross_target[0], cross_target[1], cross_target[2])
