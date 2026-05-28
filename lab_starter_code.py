@@ -29,7 +29,7 @@ def initialize_robot(api):
         print(state_full)
         if state == dType.DobotConnect.DobotConnect_NoError:
             print("Connected!")
-            name = dType.GetDeviceName(api)
+            name = "Hermy"#dType.GetDeviceName(api)
             if name[0] == "Not a dobot":
                 dType.DisconnectDobot(api)
                 continue
