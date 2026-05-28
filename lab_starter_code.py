@@ -115,27 +115,73 @@ print("\n--- Part 2: Workspace Validation Tests ---")
 print("Moving to safe start position...")
 move_to_xyz(api, 200, 0, -10) 
 
-current_pose_full = dType.GetPose(api) 
-current_xyz = current_pose_full[0:3] 
-
-print("\n--- TEST 1: A Valid Point ---")
-valid_target = [200, 50, -50] 
+# --- TEST 1: Valid Point ---
+print("\n--- TEST 1: Valid Point ---")
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+valid_target = [200, 0, -50] 
 if is_safe_move(current_xyz, valid_target):
     print(f"Path to {valid_target} is SAFE. Moving robot...")
     move_to_xyz(api, valid_target[0], valid_target[1], valid_target[2])
 else:
     print(f"WARNING: Path to {valid_target} rejected!")
 
-current_pose_full = dType.GetPose(api) 
-current_xyz = current_pose_full[0:3] 
-
-print("\n--- TEST 2: An Invalid Point ---")
-invalid_target = [300, 0, -50] 
-if is_safe_move(current_xyz, invalid_target):
-    print(f"Path to {invalid_target} is SAFE. Moving robot...")
-    move_to_xyz(api, invalid_target[0], invalid_target[1], invalid_target[2])
+# --- TEST 2: Z-Boundary Limit ---
+print("\n--- TEST 2: Z-Boundary Limit ---")
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+z_target = [200, 0, 5] 
+if is_safe_move(current_xyz, z_target):
+    print(f"Path to {z_target} is SAFE. Moving robot...")
+    move_to_xyz(api, z_target[0], z_target[1], z_target[2])
 else:
-    print(f"WARNING: Path to {invalid_target} rejected! Radius too large.")
+    print(f"WARNING: Path to {z_target} rejected! Z-height out of bounds.")
+
+# --- TEST 3: X-Boundary Limit ---
+print("\n--- TEST 3: X-Boundary Limit ---")
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+x_target = [-10, 200, -50] 
+if is_safe_move(current_xyz, x_target):
+    print(f"Path to {x_target} is SAFE. Moving robot...")
+    move_to_xyz(api, x_target[0], x_target[1], x_target[2])
+else:
+    print(f"WARNING: Path to {x_target} rejected! Cannot reach behind robot.")
+
+# --- TEST 4: Maximum Radius ---
+print("\n--- TEST 4: Maximum Radius ---")
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+max_rad_target = [265, 0, -50] 
+if is_safe_move(current_xyz, max_rad_target):
+    print(f"Path to {max_rad_target} is SAFE. Moving robot...")
+    move_to_xyz(api, max_rad_target[0], max_rad_target[1], max_rad_target[2])
+else:
+    print(f"WARNING: Path to {max_rad_target} rejected! Radius exceeds 260mm.")
+
+# --- TEST 5: Minimum Radius ---
+print("\n--- TEST 5: Minimum Radius ---")
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+min_rad_target = [139, 0, -50] 
+if is_safe_move(current_xyz, min_rad_target):
+    print(f"Path to {min_rad_target} is SAFE. Moving robot...")
+    move_to_xyz(api, min_rad_target[0], min_rad_target[1], min_rad_target[2])
+else:
+    print(f"WARNING: Path to {min_rad_target} rejected! Radius under 140mm.")
+
+# --- TEST 6: Line Crossing Minimum Radius Zone ---
+print("\n--- TEST 6: Line Crossing Minimum Radius Zone ---")
+print("Setting up start point for line test...")
+move_to_xyz(api, 0, 200, -50) 
+current_pose = dType.GetPose(api) 
+current_xyz = current_pose[0:3] 
+cross_target = [0, -200, -50] 
+if is_safe_move(current_xyz, cross_target):
+    print(f"Path to {cross_target} is SAFE. Moving robot...")
+    move_to_xyz(api, cross_target[0], cross_target[1], cross_target[2])
+else:
+    print(f"WARNING: Path to {cross_target} rejected! Path intersects restricted center zone.")
 
 # 3. PART 3: Trajectory Execution
 print("\n--- Part 3: Fun with Trajectories ---")
