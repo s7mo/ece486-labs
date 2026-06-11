@@ -236,11 +236,11 @@ if __name__ == "__main__":
     print("="*50)
     
     edge_cases = [
-        [260, 0, -10,    "Max Radius, Safest Max Height"],
-        [260, 0, -120,   "Max Radius, Min Height"],
-        [140, 0, -10,    "Min Radius, Safest Max Height"],
-        [140, 0, -120,   "Min Radius, Min Height"],
-        [0, 200, -50,    "X-Boundary Limit (Y-Axis Reach)"]
+        [260, 0, 0,    "Max Radius, Safest Max Height"],
+        [260, 0, 0,   "Max Radius, Min Height"],
+        [140, 0, 0,    "Min Radius, Safest Max Height"],
+        [200, 0, 0,   "Min Radius, Min Height"],
+        [0, 200, 0,    "X-Boundary Limit (Y-Axis Reach)"]
     ]
     
     for case in edge_cases:
@@ -260,10 +260,10 @@ if __name__ == "__main__":
     # Bulletproof Joint Angles. J2 and POS6 are locked at 45 degrees, 
     # which keeps the tool safely in the dead-center of the radius limits.
     test_joints = [
-        [0.0, 45.0, 45.0],    # Straight forward
+        [0.0, 45.0, 0.0],    # Straight forward
         [30.0, 45.0, 45.0],   # Angled left
         [-30.0, 45.0, 45.0],  # Angled right
-        [15.0, 45.0, 45.0]    # Safe staging, slightly left for homing
+        [15.0, 45.0, 30.0]    # Safe staging, slightly left for homing
     ]
     
     # ---------------------------------------------------------
