@@ -259,13 +259,19 @@ if __name__ == "__main__":
     
     # Safe Joint Angles to test inside the Lab 1 envelope
     test_joints = [
-        [-45.0, 40.0, 65.0],    #rotated right 
-        [90.0, 35.0, 60.0],   #90 twist
-        [45.0, 45.0, 70.0],  # rotated left, nice tuck this time
-        [15.0, 45.0, 20.0]    #safe stage, slightly left so it can go back home this time
+        [-45.0, 40.0, 65.0],    # rotated right 
+        [90.0, 35.0, 60.0],     # 90 twist
+        [45.0, 45.0, 70.0],     # rotated left, nice tuck this time
+        [15.0, 45.0, 20.0]      # safe stage, slightly left so it can go back home this time
     ]
     
-    # Grab the current position before the loop starts
+    # ---------------------------------------------------------
+    # THE FIX: Move down into the safe Z-zone BEFORE testing!
+    # ---------------------------------------------------------
+    print("Staging robot inside the safe bounding box...")
+    move_to_xyz(api, 200, 0, -10) 
+
+    # Now grab the current position, which is legally Z < 0
     actual_pose = dType.GetPose(api)
     current_xyz = actual_pose[0:3]
     
@@ -299,4 +305,9 @@ if __name__ == "__main__":
 
     print("\nAll tests complete! Moving back to home position.")
     move_to_home(api)
+    
+    # Wait for the physical arm to fully decelerate before dropping the serial connection
+    print("Waiting for hardware to settle...")
+    time.sleep(2)
+    
     dType.DisconnectDobot(api)
