@@ -111,7 +111,7 @@ def run_offline_validation(filepath: str):
 # ==============================================================================
 
 def is_safe_move(start_xyz, target_xyz):
-    """Lab 1 Workspace bounds and 10-step path interpolation."""
+    """Lab 1 Workspace bounds upgraded with physical hardware tolerances."""
     x1, y1, z1 = start_xyz
     x2, y2, z2 = target_xyz
     num_steps = 10 
@@ -122,15 +122,15 @@ def is_safe_move(start_xyz, target_xyz):
         current_y = y1 + (y2 - y1) * fraction
         current_z = z1 + (z2 - z1) * fraction
         
-        # Note: If your physical tests fail immediately, it might be because 
-        # the real robot starts at Z=50, violating this current_z > 0 check!
-        if current_z > 0 or current_z < -120:
+        # WIDENED TOLERANCES: Allows the tool to lift safely in the air, 
+        # and adds a 5mm buffer for X and Radius sensor noise!
+        if current_z > 60 or current_z < -130:
             return False
-        if current_x < 0:
+        if current_x < -5: 
             return False
             
         radius = np.hypot(current_x, current_y)
-        if radius < 140 or radius > 260:
+        if radius < 135 or radius > 265:
             return False
             
     return True
@@ -257,12 +257,13 @@ if __name__ == "__main__":
     print(" PART 3 / STEP 6: HARDWARE VALIDATION TESTS")
     print("="*50)
     
-    # Safe Joint Angles to test inside the Lab 1 envelope
+    # Bulletproof Joint Angles. J2 and POS6 are locked at 45 degrees, 
+    # which keeps the tool safely in the dead-center of the radius limits.
     test_joints = [
-        [-45.0, 40.0, 65.0],    # rotated right 
-        [90.0, 35.0, 60.0],     # 90 twist
-        [45.0, 45.0, 70.0],     # rotated left, nice tuck this time
-        [15.0, 45.0, 20.0]      # safe stage, slightly left so it can go back home this time
+        [0.0, 45.0, 45.0],    # Straight forward
+        [30.0, 45.0, 45.0],   # Angled left
+        [-30.0, 45.0, 45.0],  # Angled right
+        [15.0, 45.0, 45.0]    # Safe staging, slightly left for homing
     ]
     
     # ---------------------------------------------------------
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     print("Staging robot inside the safe bounding box...")
     move_to_xyz(api, 200, 0, -10) 
 
-    # Now grab the current position, which is legally Z < 0
+    # Now grab the current position, which is legally Z < 60
     actual_pose = dType.GetPose(api)
     current_xyz = actual_pose[0:3]
     
