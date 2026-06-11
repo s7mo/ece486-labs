@@ -186,12 +186,12 @@ def initialize_robot(api):
         dType.dSleep(25)
 
 def move_to_xyz(api, x, y, z):
-    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVLXYZMode, x, y, z, 0, isQueued=0)[0]
+    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVLXYZMode, x, y, z, 0, isQueued=1)[0]
     while execCmd > dType.GetQueuedCmdCurrentIndex(api)[0]:
         dType.dSleep(25)
 
 def move_joint_angles(api, J1, J2, J3, J4=0):
-    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVJANGLEMode, J1, J2, J3, J4, isQueued=0)[0]
+    execCmd = dType.SetPTPCmd(api, dType.PTPMode.PTPMOVJANGLEMode, J1, J2, J3, J4, isQueued=1)[0]
     while execCmd > dType.GetQueuedCmdCurrentIndex(api)[0]:
         dType.dSleep(25)
 
@@ -259,10 +259,10 @@ if __name__ == "__main__":
     
     # Safe Joint Angles to test inside the Lab 1 envelope
     test_joints = [
-        [0.0, 45.0, 0.0],     
-        [30.0, 50.0, 10.0],   
-        [-30.0, 40.0, -10.0], 
-        [45.0, 45.0, 5.0]    
+        [-45.0, 40.0, 65.0],    #rotated right 
+        [90.0, 35.0, 60.0],   #90 twist
+        [45.0, 45.0, 70.0],  # rotated left, nice tuck this time
+        [15.0, 45.0, 20.0]    #safe stage, slightly left so it can go back home this time
     ]
     
     # Grab the current position before the loop starts
