@@ -211,6 +211,6 @@ cap.release()
 cv2.destroyAllWindows()
 
 # Save data for transformation computation
-np.save("camera_points.npy", np.array(camera_points))
-np.save("robot_points.npy", np.array(robot_points))
+np.save("valid_camera_points.npy", np.array(camera_points))
+np.save("valid_robot_points.npy", np.array(robot_points))
 print("Data collection complete. Run transformation fitting script next!")
