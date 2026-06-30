@@ -35,7 +35,6 @@ def initialize_robot(api):
         print("Error: The robot either isn't on or isn't responding. Exiting now")
         exit()
     
-    
     #we've found it, so let's try to connect
     state = dType.DobotConnect.DobotConnect_NoError
     for i in range(0,len(com_port)):
@@ -119,8 +118,6 @@ def move_joint_angles(api,J1,J2,J3,J4=0):
     while execCmd > dType.GetQueuedCmdCurrentIndex(api)[0]:
         dType.dSleep(25)
 
-    
-    
 """
     Move the robot to it's home position. Note: this will use basic PTP motion, rather than
     SetHOMECmd, since SetHOMECmd will re-run the sensor initialization stuff that we don't
@@ -129,7 +126,37 @@ def move_joint_angles(api,J1,J2,J3,J4=0):
 def move_to_home(api):
     move_to_xyz(api,home_pos[0],home_pos[1],home_pos[2])
     
-    
+# ==============================================================================
+# RANDOM POINT GENERATOR
+# ==============================================================================
+def generate_conservative_workspace_points(num_points=20):
+    """
+    Generates random (X, Y, Z) coordinates within a highly conservative workspace.
+    Restricts J1 angle between 0 and -50 degrees clockwise.
+    """
+    points = []
+    for _ in range(num_points):
+        # Safe Z limits (-45mm to 0mm)
+        z = np.random.uniform(-45, 0)
+        
+        # Conservative radius (160mm to 240mm) for uniform area distribution
+        r = np.sqrt(np.random.uniform(160**2, 240**2))
+        
+        # Restricted J1 Angle (0 to -50 degrees)
+        j1_deg = np.random.uniform(-50, 0)
+        j1_rad = np.radians(j1_deg)
+        
+        x = r * np.cos(j1_rad)
+        y = r * np.sin(j1_rad)
+        
+        # Format expects (X, Y, Z, R_angle)
+        points.append((round(x, 2), round(y, 2), round(z, 2), 0))
+        
+    return points
+
+# ==============================================================================
+# MAIN SCRIPT
+# ==============================================================================
 #init robot
 initialize_robot(api)
 
@@ -143,43 +170,33 @@ camera_matrix = np.array([[602.90771193, 0, 316.8286491],
                           [0, 600.3249801, 238.29043557], 
                           [0, 0, 1]], dtype=np.float32)
                           
-# You should also put the distortion coefficients here                          
+# Distortion coefficients                          
 dist_coeffs = np.array([[0.02243665, -0.17733009,  0.00283992,  0.00068168,  0.19082363]], dtype=np.float32).T
 
 # Open webcam
 cap = cv2.VideoCapture(0)
 
-# Robot positions to move to (you should add your positions here - there are not NEARLY enough points to make this work right now)
-robot_positions = [
-    (220, 0, 0, 0),   # (X, Y, Z, R) positions in robot's world frame
-    (180, -110, -5, -30), #EVERYTHING SHOULD BE TO THE LEFT OF THIS OR CW < -30 R
-    (210, -130, -5, -30),
-    (145, -180, -5, -30),
-    (230, -200, -5, -30),
-    (180, -110, -25, -30), #EVERYTHING SHOULD BE TO THE LEFT OF THIS OR CW < -30 R
-    (210, -130, -25, -30),
-    (145, -180, -25, -30),
-    (230, -200, -25, -30),
-    (180, -110, -45, -30), #EVERYTHING SHOULD BE TO THE LEFT OF THIS OR CW < -30 R
-    (210, -130, -45, -30),
-    (145, -180, -45, -30),
-    (230, -200, -45, -30),
-    (220, 0, 0, 0),
-]
+# Generate 20 safe validation targets
+robot_positions = generate_conservative_workspace_points(20)
 
 # Data storage for transformation fitting
 camera_points = []  # Detected marker positions in camera frame
 robot_points = []   # Corresponding robot world-frame positions
 
+print(f"Generated {len(robot_positions)} validation points. Starting collection...")
+
 # Move the robot and collect data
 for pos in robot_positions:
-    print(f"Moving to: {pos}")
+    print(f"\nMoving to: {pos}")
     
     move_to_xyz(api,pos[0],pos[1],pos[2])
     
     # Get actual robot position in world frame
     robot_pose = dType.GetPose(api)
     X_r, Y_r, Z_r = robot_pose[:3]  # Extract world coordinates
+
+    # Give the camera a brief moment to focus/settle before snapping
+    time.sleep(0.5)
 
     # Capture frame
     ret, frame = cap.read()
@@ -205,12 +222,17 @@ for pos in robot_positions:
             """
             robot_points.append([X_r/1000, Y_r/1000, Z_r/1000])
             print(f"Recorded: Camera {tvecs[i].flatten()} -> Robot {X_r, Y_r, Z_r}")
+    else:
+        print("WARNING: ArUco marker not detected at this position!")
 
 # Release camera
 cap.release()
 cv2.destroyAllWindows()
 
-# Save data for transformation computation
+# Move safely out of the way when done
+move_to_home(api)
+
+# Save data for validation computation
 np.save("valid_camera_points.npy", np.array(camera_points))
 np.save("valid_robot_points.npy", np.array(robot_points))
-print("Data collection complete. Run transformation fitting script next!")
+print("\nValidation data collection complete. Files saved!")
