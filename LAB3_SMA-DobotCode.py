@@ -239,10 +239,14 @@ sim_C_z = actual_xyz[2] - (L2 * np.cos(j2_rad) - L3 * np.sin(pos6_rad))
 
 # Safe coordinates well within the 140-260 radius and Z < 0
 test_xyz_targets = [
-    [200, 0, -20],    
-    [190, 40, -20],   
-    [210, -40, -20],  
-    [180, 20, -20]    
+    [150, 100, -20],    
+    [220, 50, -20],   
+    [150, -50, -20],  
+    [220, -100, -20],  
+    [150, -100, -10],    
+    [220, -50, -10],   
+    [150, 50, -10],  
+    [220, 100, -10] 
 ]
 
 for idx, target_xyz in enumerate(test_xyz_targets):
